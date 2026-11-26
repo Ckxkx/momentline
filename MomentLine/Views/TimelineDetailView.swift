@@ -254,7 +254,7 @@ private struct EventRow: View {
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                 }
-                Text(event.occurredAt.formatted(date: .abbreviated, time: .short))
+                Text(event.occurredAt.formatted(date: .abbreviated, time: .shortened))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
