@@ -79,7 +79,7 @@ struct SettingsView: View {
     }
 
     private var dataSection: some View {
-        Section("数据管理") {
+        Section {
             LabeledContent("本地时间线", value: "\(store.timelines.count) 条")
             LabeledContent("本地事件", value: "\(store.totalEventCount) 个")
             Button { prepareExport() } label: {
@@ -92,6 +92,8 @@ struct SettingsView: View {
                     .frame(minHeight: 44)
             }
             .disabled(store.loadError != nil)
+        } header: {
+            Text("数据管理")
         } footer: {
             Text("即使没有时间线也可以导出空备份。数据仅保存在当前设备，备份采用 UTF-8 JSON v2 格式。")
         }
