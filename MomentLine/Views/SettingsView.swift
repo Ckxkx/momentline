@@ -18,79 +18,93 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("外观") {
-                    Picker("显示模式", selection: $store.appearance) {
-                        ForEach(AppAppearance.allCases) { appearance in
-                            Text(appearance.title).tag(appearance)
-                        }
+            settingsForm
+                .navigationTitle("设置与数据")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("完成") { dismiss() }
+                            .frame(minWidth: 44, minHeight: 44)
                     }
-                    .pickerStyle(.segmented)
-                    .listRowBackground(Color.clear)
                 }
+                .alert("妥善保管备份", isPresented: $showingExportWarning) {
+                    Button("取消", role: .cancel) {}
+                    Button("继续") { showingExporter = true }
+                } message: {
+                    Text("备份包含全部时间线、事件标题和备注等个人内容。请仅保存到你信任的位置，并妥善保管文件。")
+                }
+                .fileExporter(
+                    isPresented: $showingExporter,
+                    document: exportDocument,
+                    contentType: .json,
+                    defaultFilename: exportFilename,
+                    onCompletion: handleExport
+                )
+                .fileImporter(
+                    isPresented: $showingImporter,
+                    allowedContentTypes: [.json],
+                    allowsMultipleSelection: false,
+                    onCompletion: handleFileSelection
+                )
+                .sheet(item: $importPreview) { preview in
+                    ImportPreviewView(preview: preview)
+                        .environmentObject(store)
+                }
+                .alert(alertTitle, isPresented: $showingAlert) {
+                    Button("知道了", role: .cancel) {}
+                } message: {
+                    Text(alertMessage)
+                }
+        }
+    }
 
-                Section("数据管理") {
-                    LabeledContent("本地时间线", value: "\(store.timelines.count) 条")
-                    LabeledContent("本地事件", value: "\(store.totalEventCount) 个")
-                    Button { prepareExport() } label: {
-                        Label("导出完整备份", systemImage: "square.and.arrow.up")
-                            .frame(minHeight: 44)
-                    }
-                    .disabled(store.loadError != nil)
-                    Button { showingImporter = true } label: {
-                        Label("从备份导入", systemImage: "square.and.arrow.down")
-                            .frame(minHeight: 44)
-                    }
-                    .disabled(store.loadError != nil)
-                } footer: {
-                    Text("即使没有时间线也可以导出空备份。数据仅保存在当前设备，备份采用 UTF-8 JSON v2 格式。")
-                }
+    private var settingsForm: some View {
+        Form {
+            appearanceSection
+            dataSection
+            aboutSection
+        }
+    }
 
-                Section {
-                    LabeledContent("存储方式", value: "本地离线 · 原子写入")
-                    LabeledContent("备份格式", value: "MomentLine / v2")
-                } header: {
-                    Text("关于")
-                } footer: {
-                    Text("Moment Line 不需要账号、网络或额外设备权限。显示偏好不会随备份导入而改变。")
+    private var appearanceSection: some View {
+        Section("外观") {
+            Picker("显示模式", selection: $store.appearance) {
+                ForEach(AppAppearance.allCases) { appearance in
+                    Text(appearance.title).tag(appearance)
                 }
             }
-            .navigationTitle("设置与数据")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") { dismiss() }
-                        .frame(minWidth: 44, minHeight: 44)
-                }
+            .pickerStyle(.segmented)
+            .listRowBackground(Color.clear)
+        }
+    }
+
+    private var dataSection: some View {
+        Section("数据管理") {
+            LabeledContent("本地时间线", value: "\(store.timelines.count) 条")
+            LabeledContent("本地事件", value: "\(store.totalEventCount) 个")
+            Button { prepareExport() } label: {
+                Label("导出完整备份", systemImage: "square.and.arrow.up")
+                    .frame(minHeight: 44)
             }
-            .alert("妥善保管备份", isPresented: $showingExportWarning) {
-                Button("取消", role: .cancel) {}
-                Button("继续") { showingExporter = true }
-            } message: {
-                Text("备份包含全部时间线、事件标题和备注等个人内容。请仅保存到你信任的位置，并妥善保管文件。")
+            .disabled(store.loadError != nil)
+            Button { showingImporter = true } label: {
+                Label("从备份导入", systemImage: "square.and.arrow.down")
+                    .frame(minHeight: 44)
             }
-            .fileExporter(
-                isPresented: $showingExporter,
-                document: exportDocument,
-                contentType: .json,
-                defaultFilename: exportFilename,
-                onCompletion: handleExport
-            )
-            .fileImporter(
-                isPresented: $showingImporter,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false,
-                onCompletion: handleFileSelection
-            )
-            .sheet(item: $importPreview) { preview in
-                ImportPreviewView(preview: preview)
-                    .environmentObject(store)
-            }
-            .alert(alertTitle, isPresented: $showingAlert) {
-                Button("知道了", role: .cancel) {}
-            } message: {
-                Text(alertMessage)
-            }
+            .disabled(store.loadError != nil)
+        } footer: {
+            Text("即使没有时间线也可以导出空备份。数据仅保存在当前设备，备份采用 UTF-8 JSON v2 格式。")
+        }
+    }
+
+    private var aboutSection: some View {
+        Section {
+            LabeledContent("存储方式", value: "本地离线 · 原子写入")
+            LabeledContent("备份格式", value: "MomentLine / v2")
+        } header: {
+            Text("关于")
+        } footer: {
+            Text("Moment Line 不需要账号、网络或额外设备权限。显示偏好不会随备份导入而改变。")
         }
     }
 
