@@ -1,0 +1,4 @@
+-keep class com.momentline.android.data.Timeline { *; }
+-keep class com.momentline.android.data.TimelineEvent { *; }
+-keepclassmembers class com.momentline.android.data.Timeline$Companion { *; }
+-keepclassmembers class com.momentline.android.data.TimelineEvent$Companion { *; }
